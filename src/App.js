@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import UserList from "./components/UserList";
 import SearchSortBar from "./components/SearchSortBar";
 import axios from 'axios'
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("date");
+  const [sortBy, setSortBy] = useState("name");
   const [selectedIds, setSelectedIds] = useState([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
-
   const [data, setData] = useState([]);
+  const listRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,12 +25,12 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (data.current) {
-        setShowScrollTop(data.current.scrollTop > 200);
+      if (listRef.current) {
+        setShowScrollTop(listRef.current.scrollTop > 200);
       }
     };
 
-    const currentRef = data.current;
+    const currentRef = listRef.current;
     if (currentRef) {
       currentRef.addEventListener("scroll", handleScroll);
     }
@@ -40,15 +40,15 @@ function App() {
         currentRef.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [data]);
+  }, []);
 
   const filteredSortedData = useMemo(() => {
-    let result = data.filter((data) =>
-      data.title(searchTerm.toLowerCase())
+    let result = data.filter((user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     result.sort((a, b) => {
-      if (sortBy === "name") return a.title.localeCompare(b.name);
-      return new Date(b.date) - new Date(a.date);
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return a.id - b.id;
     });
     return result;
   }, [searchTerm, sortBy, data]);
@@ -111,12 +111,16 @@ function App() {
                 </div>
               )}
 
-              <UserList
-                data={filteredSortedData}
-                selectedIds={selectedIds}
-                toggleSelect={toggleSelect}
-                outerRef={data}
-              />
+              <div
+                ref={listRef}
+                style={{ maxHeight: 400, overflowY: "auto" }}
+              >
+                <UserList
+                  data={filteredSortedData}
+                  selectedIds={selectedIds}
+                  toggleSelect={toggleSelect}
+                />
+              </div>
             </>
           )}
         </div>
@@ -125,7 +129,7 @@ function App() {
       {showScrollTop && (
         <button
           onClick={() =>
-            data.current?.scrollTo({ top: 0, behavior: "smooth" })
+            listRef.current?.scrollTo({ top: 0, behavior: "smooth" })
           }
           className="fixed bottom-6 right-6 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition"
           title="Scroll to Top"

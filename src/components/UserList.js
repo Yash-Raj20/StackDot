@@ -6,7 +6,8 @@ const VirtualizedList = ({ data, selectedIds, toggleSelect, outerRef }) => {
   const Row = ({ index, style }) => (
     <div style={{ ...style, width: "100%" }}>
       <ListItem
-        item={data[index]}
+        data={data[index]}
+        style={style}
         isSelected={selectedIds.includes(data[index].id)}
         toggleSelect={toggleSelect}
       />
